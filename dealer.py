@@ -30,12 +30,7 @@ class random_select(threading.Thread):
                     else:
                         index=randint(0,len(clients)-1)
                         client_id=clients[index]
-                        timer=randint(3,9)
-                    global signal
-                    # signal="Wait signal sent to "+str(name[index])+" to wait for "+str(timer)
-                    # print("Wait signal sent to ",name[index]," to wait for ",timer)
-                    x=10
-                # print("Next wait signal in",x)
+                        timer=randint(3,9) 
                 time.sleep(1)
 class handle_client(threading.Thread):
     def __init__(self):
@@ -63,6 +58,8 @@ class myThread(threading.Thread):
         self.id=id
         self.n="" 
         self.msg=100
+        self.client_num=-1
+        self.dealer_num=-1
     def run(self): 
         err=0  
         clients.append(self.id) 
@@ -75,43 +72,53 @@ class myThread(threading.Thread):
         else:
             global timer  
             send_num=-1
-            while (True):    
+            while (True):     
                 try:
-                    if(self.msg==100): 
-                        signal_disconnected=""
-                        self.msg=201  
+                    if(self.msg==100):  
+                        self.msg="201"+":server address" 
                     elif(send_num==0):
                         num=randint(0,12)
-                        self.msg="num:"+str(num)   
-                        send_num=-1
+                        self.dealer_num=num
+                        self.msg="num:"+str(num)    
                     else:
                         self.msg=200
                     data = pickle.dumps(self.msg)
                     self.c.send(data)
                     rdata = pickle.loads(self.c.recv(1024))
+                    if(send_num==0):
+                        self.client_num=int(rdata)
+                        send_num=-1
                     if(rdata==700):
                         send_num=0
                     elif(rdata!=200 and self.msg!=201):
                         display=rdata
                         global signal
                         signal=rdata
-                        print("from client number is")
-                        print(display)
-                    if(self.msg==201): 
+                        client_num=display 
+                    elif(re.search("^201:*",str(self.msg))!=None): 
                         if(rdata in name):
                             self.msg=400
                             data = pickle.dumps(self.msg)
                             self.c.send(data)
                             raise("Client is already connected")
                         else: 
-                            self.n=rdata 
+                            self.n=rdata  
+                            print("clients address is:",self.n)
                             name.append(self.n)
-                            self.msg=200
+                            self.msg=200 
+                    if(self.client_num!=-1 and self.dealer_num!=-1):
+                            if(self.client_num>=self.dealer_num):
+                                print("loose")
+                            else:
+                                print("win")
+                            self.client_num=-1
+                            self.dealer_num=-1
                 except Exception as e: 
                     err=1 
+                    print(e)
                     if(self.n!=""): 
                         signal_disconnected=self.n+" disconnected"
-                        print(self.n," disconnected")
+                        # print(self.n," disconnected")
                     clients.remove(self.id) 
                     if(self.n!=""):
                         name.remove(self.n)
