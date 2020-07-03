@@ -60,6 +60,7 @@ class myThread(threading.Thread):
         self.msg=100
         self.client_num=-1
         self.dealer_num=-1
+        self.caddress=""
     def run(self): 
         err=0  
         clients.append(self.id) 
@@ -72,10 +73,10 @@ class myThread(threading.Thread):
         else:
             global timer  
             send_num=-1
-            while (True):     
-                try:
+            while (True):      
+                try: 
                     if(self.msg==100):  
-                        self.msg="201"+":server address" 
+                        self.msg="201"+":RNN7PDBbR8udUrbGQoMs6mt8vxog9JS96c" 
                     elif(send_num==0):
                         num=randint(0,12)
                         self.dealer_num=num
@@ -84,28 +85,28 @@ class myThread(threading.Thread):
                         self.msg=200
                     data = pickle.dumps(self.msg)
                     self.c.send(data)
-                    rdata = pickle.loads(self.c.recv(1024))
+                    rdata = pickle.loads(self.c.recv(1024)) 
                     if(send_num==0):
                         self.client_num=int(rdata)
                         send_num=-1
                     if(rdata==700):
                         send_num=0
-                    elif(rdata!=200 and self.msg!=201):
-                        display=rdata
-                        global signal
-                        signal=rdata
-                        client_num=display 
-                    elif(re.search("^201:*",str(self.msg))!=None): 
+                    if(re.search("^201:*",str(self.msg))!=None): 
+                        self.caddress=rdata
                         if(rdata in name):
                             self.msg=400
                             data = pickle.dumps(self.msg)
                             self.c.send(data)
                             raise("Client is already connected")
                         else: 
-                            self.n=rdata  
-                            print("clients address is:",self.n)
+                            self.n=rdata   
                             name.append(self.n)
                             self.msg=200 
+                    elif(rdata!=200 and self.msg!=201):
+                        display=rdata
+                        global signal
+                        signal=rdata
+                        client_num=display 
                     if(self.client_num!=-1 and self.dealer_num!=-1):
                             if(self.client_num>=self.dealer_num):
                                 print("loose")
